@@ -1,0 +1,7 @@
+<meta>
+   <info name="CoreMTA-Updater" author="Tails" type="script" version="1.0"/>
+   <min_mta_version client="1.5.9" server="1.5.9"/>
+   <oop>true</oop>
+   <script src="server.lua" type="server"/>
+   <script src="client.lua" type="client" cache="false"/>
+</meta>

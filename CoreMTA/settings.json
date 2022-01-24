@@ -1,0 +1,10 @@
+{
+	"settings": {
+		"encryption": true,
+		"encryptionKey": "test",
+		"autoUpdate": true
+	},
+	
+	"modules": ["dx"],
+	"autostart": ["notifs"]
+}

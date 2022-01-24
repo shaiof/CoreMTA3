@@ -1,0 +1,24 @@
+<meta>
+    <info name="CoreMTA" author="ShayF, Tails" type="script" version="1.0" />
+    <min_mta_version client="1.5.5-9.14060" server="1.5.5-9.14060" />
+    <oop>true</oop>
+    
+    <!-- Global Funcs, add funcs in these files to share them across all your scripts! -->
+    <script src="globals/shared.lua" type="shared" />
+    <script src="globals/client.lua" type="client" />
+    <script src="globals/server.lua" type="server" />
+    
+    <!-- Core Loader Files -->
+    <script src="core/Res_server.lua" type="server" />
+    <script src="core/Script_server.lua" type="server" />
+    <script src="core/newFuncs_server.lua" type="server" />
+    <script src="core/Res_client.lua" type="client" />
+    <script src="core/Script_client.lua" type="client" />
+    <script src="core/newFuncs_client.lua" type="client" />
+    <script src="core/loader_sh.lua" type="shared" />
+    <script src="core/updater.lua" type="server" />
+    <script src="core/ui.lua" type="client" />
+    
+    <!-- Lua Modules -->
+    <script src="modules/dx.lua" type="client"/>
+</meta>
