@@ -6,7 +6,7 @@ addEvent('onClientResStart', true)
 
 Res = {}
 resources = {}
-Settings = {}
+Settings = {'test'}
 
 function Res.new(name)
     local self = setmetatable({}, {__index = Res})
