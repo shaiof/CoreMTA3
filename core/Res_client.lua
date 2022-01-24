@@ -91,29 +91,6 @@ end
 addEvent('onResStop', true)
 addEventHandler('onResStop', root, Res.stop)
 
-function Res.downloadScripts(urls, callback)
-	local progress = {}
-    local completed = {}
-
-    for i=1, #urls do
-		local url = urls[i]
-        Script.download(url, function(data, err)
-            progress[i] = {url=url, data=data, filename=filename, err=err}
-
-            for j=1, #urls do
-                local prog = progress[j]
-                if prog then
-                    completed[j] = progress[j]
-                end
-            end
-
-            if #completed == #urls then
-                callback(completed)
-            end
-        end)
-    end
-end
-
 function Res.inspect(name)
 	local name = name
 	local res = resources[name]
@@ -205,3 +182,5 @@ end
 setTimer(checkCursor, 50, 0) --bad practice..
 
 addCommandHandler('inspectres', function(...) if not arg[2] then return end Res.inspect(arg[2]) end)
+
+

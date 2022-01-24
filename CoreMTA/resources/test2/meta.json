@@ -1,4 +1,0 @@
-{
-	"server": ["server.lua"],
-	"client": ["client.lua", "broadway.txd", "broadway.dff", "samba.txt"]
-}
