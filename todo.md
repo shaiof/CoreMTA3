@@ -30,6 +30,8 @@
 - [ ] /restartres screws up file downloads (starts too fast after stop, need to use stop/start events for temp res?)
 - [ ] fix import function from utils resource that's loaded in w/ loadstring, it overrides core import func. we need to prevent scripts overriding Core functions
 - [ ] modules should be imported via import func (rn import imports res globals)
+- [ ] add support for .map files (map resources)
+- [ ] add support for gamemodes (multiple gamemodes ?)
 
   # priority
   - [x] CEGUI is not being destroyed!, we are storing gui elements inside serverroot/clientroot, destroying the root does not destroy the gui elements. we must store them in a table instead.
