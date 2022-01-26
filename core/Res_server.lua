@@ -253,16 +253,33 @@ end
 
 function updateResourcesList(name)
     local path = 'resources/resources.json'
-    local f = File(path)
-    local list = fromJSON(f:read(f.size)) or {}
+    local list
 
-    if not list[name] then
-        list[name] = {}
+    local oldFile = fileOpen(path)
+    if oldFile then
+        list = fromJSON(oldFile:read(oldFile.size)) or {}
+        oldFile:close()
     end
 
-    f:setPos(0)
-    f:write(toJSON(list))
-    f:close()
+    for i=#list, 1, -1 do
+        local resName = list[i]
+        if not fileExists('resources/'..resName..'/meta.xml') and
+           not fileExists('resources/'..resName..'/meta.json') then
+            table.remove(list, i)
+        else
+            if resName == name then
+                table.remove(list, i)
+            end
+        end
+    end
+
+    table.insert(list, name)
+
+    fileDelete(path)
+
+    local newFile = File(path)
+    newFile:write(toJSON(list))
+    newFile:close()
 end
 
 function import(name)
