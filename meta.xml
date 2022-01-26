@@ -9,12 +9,16 @@
     <script src="globals/server.lua" type="server" />
     
     <!-- Core Loader Files -->
-    <script src="core/Res_server.lua" type="server" />
     <script src="core/Script_server.lua" type="server" />
-    <script src="core/newFuncs_server.lua" type="server" />
-    <script src="core/Res_client.lua" type="client" />
     <script src="core/Script_client.lua" type="client" />
+
+    <script src="core/newFuncs_sh.lua" type="shared" />
+    <script src="core/newFuncs_server.lua" type="server" />
     <script src="core/newFuncs_client.lua" type="client" />
+
+    <script src="core/Res_server.lua" type="server" />
+    <script src="core/Res_client.lua" type="client" />
+
     <script src="core/loader_sh.lua" type="shared" />
     <script src="core/updater.lua" type="server" />
     <script src="core/ui.lua" type="client" />

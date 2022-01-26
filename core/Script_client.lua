@@ -13,6 +13,8 @@ function Script.new(name, filename)
 	self.cols = {}
 	-- self.globals = {}
 	self.keyBinds = {}
+	self.remoteRequests = {}
+	self.elements = {}
 	replaceFuncs(self)
 	return self
 end
@@ -47,15 +49,19 @@ function Script.create(resName, filename, buffer)
 	return scriptLoader
 end
 
-function Script.download(url, callback)
-	if not url then return end
-	requestBrowserDomains({url}, true, function()
-		if isBrowserDomainBlocked(url, true) then
-			Script.download(url, callback)
-		else
-			fetchRemote(url, callback)
-		end
-	end)
+-- function Script.download(url, callback)
+-- 	if not url then return end
+-- 	requestBrowserDomains({url}, true, function()
+-- 		if isBrowserDomainBlocked(url, true) then
+-- 			Script.download(url, callback)
+-- 		else
+-- 			fetchRemote(url, callback)
+-- 		end
+-- 	end)
+-- end
+
+function Script.get(resName, filename)
+	return resources[resName].clientScripts[filename]
 end
 
 function Script:unload()
@@ -100,5 +106,20 @@ function Script:unload()
 	for i=1, #self.keyBinds do
 		unbindKey(unpack(self.keyBinds[i]))
 		self.keyBinds[i] = nil
+	end
+
+	for i=1, #self.remoteRequests do
+		local request = self.remoteRequests[i]
+		if getRemoteRequestInfo(request) then
+			abortRemoteRequest(request)
+		end
+		self.remoteRequests[i] = nil
+	end
+
+	for i=1, #self.elements do
+		if isElement(self.elements[i]) then
+			self.elements[i]:destroy()
+		end
+		self.elements[i] = nil
 	end
 end

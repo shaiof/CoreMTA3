@@ -11,6 +11,7 @@ function Res.new(name, serverRoot)
 	self.files = {}
 	self.scripts = {}
 	self.root = serverRoot
+	self.clientRoot = Element('resource', name)
 	self.globals = {}
 	--self.globals.root = serverRoot
 	self.loaded = false
@@ -115,6 +116,7 @@ function Res:unload()
 	for i=1, #self.scripts do
 		self.scripts[i]:unload()
 	end
+	self.clientRoot:destroy()
 	print('[Client] unloading scripts')
 end
 
@@ -137,6 +139,7 @@ function areAllResourcesLoaded()
 end
 
 function import(name)
+	-- https://stackoverflow.com/questions/28312409/how-can-i-implement-a-read-only-table-in-lua
 	return resources[name] and setmetatable({}, {
 		__index = function(self, key)
 			return resources[name].globals[key]

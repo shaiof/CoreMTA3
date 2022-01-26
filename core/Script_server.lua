@@ -10,6 +10,7 @@ function Script.new(name, filename)
 	self.timers = {}
 	-- self.globals = {}
 	self.keyBinds = {}
+	self.remoteRequests = {}
 	replaceFuncs(self)
 	return self
 end
@@ -49,7 +50,7 @@ function Script.create(resName, filename, buffer)
 end
 
 function Script.get(resName, filename)
-	return resources[resName].server[filename]
+	return resources[resName].serverScripts[filename]
 end
 
 function Script:unload()
@@ -63,16 +64,23 @@ function Script:unload()
 		self.cmds[i] = nil
 	end
 
-	for i=1, #self.keyBinds do
-		unbindKey(unpack(self.keyBinds[i]))
-		self.keyBinds[i] = nil
-	end
-
 	for i=1, #self.timers do
 		if isTimer(self.timers[i]) then
 			self.timers[i]:destroy()
 		end
 		self.timers[i] = nil
+	end
+
+	for i=1, #self.keyBinds do
+		unbindKey(unpack(self.keyBinds[i]))
+		self.keyBinds[i] = nil
+	end
+
+	for i=1, #self.remoteRequests do
+		local request = self.remoteRequests[i]
+		if getRemoteRequestInfo(request) then
+			abortRemoteRequest(request)
+		end
 	end
 
 	setmetatable(self, nil)

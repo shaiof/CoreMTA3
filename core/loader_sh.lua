@@ -19,6 +19,8 @@ function replaceFuncs(script)
         {'engineImportTXD', function(...) return script:engineImportTXD(...) end},
         {'EngineTXD', function(...) return script:engineImportTXD(...) end},
 
+        {'callRemote', function(...) return script:callRemote(...) end},
+        {'fetchRemote', function(...) return script:fetchRemote(...) end},
         {'bindKey', function(...) return script:bindKey(...) end},
         {'addEventHandler', function(...) return script:addEventHandler(...) end},
         {'addCommandHandler', function(...) return script:addCommandHandler(...) end},
@@ -33,16 +35,42 @@ function replaceFuncs(script)
 
     for i=1, #elemFuncs do
 		local origFunc = script.parent.globals[elemFuncs[i]]
-        -- leave this commented for now
-        -- if getmetatable(origFunc) then
-        --     script.parent.globals[elemFuncs[i]] = origFunc
-        -- else
-        script.parent.globals[elemFuncs[i]] = function(...)
-            local element = origFunc(...)
-            if isElement(element) then
-                element:setParent(script.parent.root)
+
+        if getmetatable(origFunc) then
+            script.parent.globals[elemFuncs[i]] = setmetatable({}, {
+                __index = function(self, key)
+                    return origFunc[key]
+                end,
+                __newindex = function(self, key, val)
+                    origFunc[key] = val
+                end,
+                __call = function(self, ...)
+                    local element = origFunc(...)
+
+                    if isElement(element) then
+                        element:setParent(script.parent.root)
+                    end
+
+                    return element
+                end
+            })
+        else
+            script.parent.globals[elemFuncs[i]] = function(...)
+                local element = origFunc(...)
+
+                if isElement(element) then
+                    if isElement(script.parent.clientRoot) then
+                        -- element:setParent(script.parent.clientRoot)
+                        if elemFuncs[i]:find('gui') then
+                            table.insert(script.elements, element)
+                        end
+                    end
+
+                    element:setParent(script.parent.root)
+                end
+
+                return element
             end
-            return element
         end
 	end
 

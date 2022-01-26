@@ -6,7 +6,7 @@ addEvent('onClientResStart', true)
 
 Res = {}
 resources = {}
-Settings = {'test'}
+Settings = {}
 
 function Res.new(name)
     local self = setmetatable({}, {__index = Res})
@@ -327,5 +327,5 @@ Timer(function()
     for i=1, #buffer.autostart do
         Res.start(buffer.autostart[i])
     end
-end, 2000, 1)
+end, 255, 1)
 

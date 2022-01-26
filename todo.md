@@ -17,24 +17,36 @@
 | import      | -        | Import modules/globals |
 
 
-# todo (not in any specific order)
-- [ ] starting res too soon causes tempResource to fail to start. a timer of 1ms on Res.start in (Res.restart) fixed this. we need to find the cause of this and find a better solution?
+# todo / issues (not in any specific order)
+- [x] import optimizations: when resources[name] is restarted, resources that have imported resources[name], don't have access to it anymore. we gotta return a function or something, then maybe use a metatable to trigger (re-import) automatically when a variable is accessed.
+- [x] cancel fetchremote/callremote requests on resStop/unload (abortRemoteRequest)
+- [x] starting res too soon causes tempResource to fail to start. a timer of 1ms on Res.start in (Res.restart)
+- [x] put more functions in shared
+- [ ] put even more functions in shared (from res)
 - [ ] create auto updater
 - [ ] add external loading
-- [ ] add file encryption (optional in meta), rewrite filefuncs/sound/etc to decrypt files
 - [ ] optimize code /shorten code
-- [ ] put more functions in shared
 - [ ] stress test core / security tests
-- [x] import optimizations: when resources[name] is restarted, resources that have imported resources[name], don't have access to it anymore. we gotta return a function or something, then maybe use a metatable to trigger (re-import) automatically when a variable is accessed. this will make the order in which resources start irrelevant (i guess).
+- [ ] change scriptbuffer events to latent events, also use: https://wiki.multitheftauto.com/wiki/GetLatentEventStatus
 
   # priority
+  - [x] CEGUI is not being destroyed!, we are storing gui elements inside serverroot/clientroot, destroying the root does not destroy the gui elements. we must store them in a table instead.
+
+  # Core GUI
+  - [ ] make advanced resource panel (Core master panel?), show resource information, script events, cmds, binds, timers, number of elements,
+uptime, cpu usage, mem usage, filelist, script list, stop/start button etc. etc.
+
+  # File function / res rootdir
   - [ ] create file class, and rewrite file funcs & playSound etc change rootdir to resroot and add in file decryption
+  - [ ] add file encryption (optional in meta), rewrite filefuncs/sound/etc to decrypt files
+
+  https://wiki.multitheftauto.com/wiki/GetResourceOrganizationalPath
 
   # critical
   - [x] server scripts not unloading (res.server contains both index and filename as key!)
-  - [?] server elements not being destroyed? (see MTA Class elements, they're not destroyed atm)
+  - [x] server elements not being destroyed? (see MTA Class elements, they're not destroyed atm)
   - [ ] onClientResourceStart is broken, onResourceStart too?
- 
+  - [ ] make sure scripts cannot access/modify main Core functions and break it!
 
   # error handling (FIXED)
   - [x] script error checking is only done on script load (scriptLoader). if there's an error that's inside, say a cmd handler, a timer or event, then it's not going through the error checking process that's happening in the scriptLoader.
@@ -47,6 +59,4 @@
 - ability to set script to read only (to prevent other resources and/or scripts to change it).
 
 # questions
-- why do we store events/cmds/binds etc. in the Script and not in the Res (parent)?
-  - we handle them per file, per file can have the same event cmd or bind. oh yea
 
