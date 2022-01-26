@@ -149,7 +149,8 @@ function Res.restart(name)
     local name = name
     if resources[name] then
         Res.stop(name)
-        Timer(Res.start, 1, 1, name)
+        -- Timer(Res.start, 1500, 1, name)
+        Res.start(name) --> won't start sometimes when there's a tempResource (timer fixes a bit but not enough, need to use onResourceStop event?)
     end
 end
 

@@ -56,7 +56,7 @@ addEventHandler("onClientRender", root, function()
                 i = i + 1
                 local mx, my, mw, mh = absoluteToRelative(1060, 284+(50*i), 1209, 306)
                 local yx, yy, yw, yh = absoluteToRelative(1207, 284+(50*i), 1356, 306)
-                dxDrawText(v.name, Vector2(mx, my), Vector2(mw, mh), tocolor(255, 255, 255, 255), 1.00, "default", "center", "center", false, false, false, false, false)
+                dxDrawText(v.name..' ('..#v.downloadedFiles..' files)', Vector2(mx, my), Vector2(mw, mh), tocolor(255, 255, 255, 255), 1.00, "default", "center", "center", false, false, false, false, false)
                 if v.loaded then
                     dxDrawText('Downloaded', Vector2(yx, yy), Vector2(yw, yh), tocolor(0, 255, 0, 255), 1.00, "default", "center", "center", false, false, false, false, false)
                 else

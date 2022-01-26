@@ -6,5 +6,5 @@
 	},
 	
 	"modules": ["dx"],
-	"autostart": ["notifs"]
+	"autostart": ["notifs", "noclip", "createres", "fps", "tp"]
 }

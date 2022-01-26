@@ -15,6 +15,7 @@ function Res.new(name, serverRoot)
 	self.globals = {}
 	--self.globals.root = serverRoot
 	self.loaded = false
+	self.downloadedFiles = {}
 	setmetatable(self.globals, {__index = _G})
 
 	resources[name] = self
@@ -49,8 +50,6 @@ function Res.start(resName, serverRoot, files, tempResourceRoot)
 		resources[resName].loaded = true
 		triggerServerEvent('getClientScriptsBuffer', root, resName)
 	else
-		local downloadedFiles = {}
-
 		local onDownloadComplete = function(filename, success, resource)
 			print('['..resName..']: Downloaded: '..filename..' Success: '..tostring(success))
 
@@ -59,9 +58,9 @@ function Res.start(resName, serverRoot, files, tempResourceRoot)
 			end
 
 			if res.files[filename] then
-				table.insert(downloadedFiles, filename)
+				table.insert(res.downloadedFiles, filename)
 
-				if #downloadedFiles == #resFiles then
+				if #res.downloadedFiles == #resFiles then
 					print('All client files downloaded')
 					resources[resName].loaded = true
 					triggerServerEvent('getClientScriptsBuffer', root, resName)
