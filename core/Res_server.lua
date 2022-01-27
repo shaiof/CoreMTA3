@@ -45,7 +45,6 @@ function Res.start(resName)
 
     res.info.name, res.info.author, res.info.version, res.info.description, res.info.type, res.info.gamemodes = res.info.name or resName, res.info.author or 'CoreMTA', res.info.version or '0.1', res.info.description or '', res.info.type or '', res.info.gamemodes or ''
 
-    -- local serverScripts, clientScripts, serverFiles, clientFiles = {}, {}, {}, {}
     if meta.server then
         for i, v in pairs(meta.server) do
             if v:match('%.lua$') then
@@ -57,17 +56,17 @@ function Res.start(resName)
     end
 
     if meta.client then
-        for r, t in pairs(meta.client) do
-            if t:match('%.lua$') then
-                res.client[#res.client+1] = t
+        for i, v in pairs(meta.client) do
+            if v:match('%.lua$') then
+                res.client[#res.client+1] = v
             else
-                res.clientFiles[#res.clientFiles+1] = t
+                res.clientFiles[#res.clientFiles+1] = v
             end
         end
     end
 
-    for e=1, #res.serverFiles do
-        res.files[res.serverFiles[e]] = true
+    for i=1, #res.serverFiles do
+        res.files[res.serverFiles[i]] = true
     end
 
     Res.loadServer(resName, res.server)
@@ -76,6 +75,11 @@ function Res.start(resName)
     if #res.clientFiles > 0 then
         res.tempResource = res:createTempResource()
         local suc = res.tempResource:start()
+
+        if not suc or res.state == 'failed to load' then
+            error('Error loading tempResource: '..resName..' Reason: '..res.tempResource.loadFailureReason, 0)
+        end
+
         print('[Server] started temp resource', res.tempResource.name, suc)
     end
 
@@ -86,9 +90,36 @@ function Res.start(resName)
     print('[Server] '..resName..' started')
 end
 
+addEventHandler('onResourceStop', root, function(tempRes)
+    if not tempRes.name:find('CORE_') then return end
+
+    iprint('stopped',tempRes)
+end)
+
 function Res:createTempResource()
+    -- refreshResources()
+
     local tempResName = 'CORE_'..self.name
-    local tempResource = getResourceFromName(tempResName) or Resource(tempResName, '[temp]')
+
+    local existingResource = getResourceFromName(tempResName)
+    if existingResource then
+        if existingResource.state == 'running' then
+            local s = stopResource(existingResource)
+            print('stopping temp res', s)
+        end
+
+        while existingResource.state ~= 'running' or existingResource.state ~= 'stopping' do -- causes freeze (need smt asychronous)
+            if existingResource.state == 'loaded' then
+                deleteResource(existingResource)
+                print('deleted old res')
+                break
+            end
+        end
+    end
+
+    refreshResources(true)
+
+    local tempResource = Resource(tempResName, '[temp]')
 
     local cfContent = 'addEventHandler("onClientResourceStart", resourceRoot, function()\n'
     cfContent = cfContent..'Timer(function()'
@@ -102,17 +133,18 @@ function Res:createTempResource()
     cfContent = cfContent..'end)'
     mfContent = mfContent..'</meta>'
 
-
-    if File.exists(':'..tempResName..'/client.lua') then
-        File.delete(':'..tempResName..'/client.lua')
-    end
+    -- if File.exists(':'..tempResName..'/client.lua') then
+    --     File.delete(':'..tempResName..'/client.lua')
+    -- end
+    tempResource:removeFile(':'..tempResName..'/client.lua')
     local cf = File(':'..tempResName..'/client.lua')
     cf:write(cfContent)
     cf:close()
 
-    if File.exists(':'..tempResName..'/meta.lua') then
-        File.delete(':'..tempResName..'/meta.lua')
-    end
+    -- if File.exists(':'..tempResName..'/meta.lua') then
+    --     File.delete(':'..tempResName..'/meta.lua')
+    -- end
+    tempResource:removeFile(':'..tempResName..'/meta.xml')
     local mf = File(':'..tempResName..'/meta.xml')
     mf:write(mfContent)
     mf:close()
@@ -157,6 +189,7 @@ end
 function Res.getMeta(name)
     local json = 'resources/'..name..'/meta.json'
     local xml = 'resources/'..name..'/meta.xml'
+
     if fileExists(json) then
         local f = File(json)
         local meta = fromJSON(f:read(f.size))
@@ -188,11 +221,6 @@ function Res.getMeta(name)
             end
         end
         xmlUnloadFile(node)
-
-        -- local f = File(json)
-        -- f:write(toJSON(meta):sub(3,-3))
-        -- f:close()
-        -- fileDelete(xml)
 
         return meta
     end
@@ -226,7 +254,6 @@ function Res.loadServer(name, scripts) -- used to be Script.loadServer (??)
             local b = f:read(f.size)
             f:close()
             resources[name]:loadServerScript(filename, b)
-
             print('[Server] '..filename..' loaded ('..i..'/'..#scripts..')')
         end
     end
@@ -299,6 +326,11 @@ end
 addEvent('getClientScriptsBuffer', true)
 addEventHandler('getClientScriptsBuffer', root, function(resourceName)
     local res = resources[resourceName]
+
+    if not res then
+        error('No resource found '..resourceName)
+    end
+
     local clientScripts = {}
     for i=1, #res.client do
         local path = 'resources/'..res.name..'/'..res.client[i]
