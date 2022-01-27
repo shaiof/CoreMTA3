@@ -27,11 +27,11 @@
 - [ ] optimize code /shorten code
 - [ ] stress test core / security tests
 - [ ] change scriptbuffer events to latent events, and use: https://wiki.multitheftauto.com/wiki/GetLatentEventStatus (see core gui)
-- [ ] /restartres screws up file downloads (starts too fast after stop, need to use stop/start events for temp res?)
-- [ ] fix import function from utils resource that's loaded in w/ loadstring, it overrides core import func. we need to prevent scripts overriding Core functions
 - [ ] modules should be imported via import func (rn import imports res globals)
 - [ ] add support for .map files (map resources)
 - [ ] add support for gamemodes (multiple gamemodes ?)
+- [ ] rethink core modules (require, global res or per script?, loadstring?). 3 options: global to core, global to res (we use scriptloader and load it before res scripts) or global per script only.
+- [ ] fix import function from utils resource that's loaded in w/ loadstring, it overrides core import func. we need to prevent scripts overriding Core functions
 
   # priority
   - [x] CEGUI is not being destroyed!, we are storing gui elements inside serverroot/clientroot, destroying the root does not destroy the gui elements. we must store them in a table instead.
@@ -52,6 +52,7 @@ uptime, cpu usage, mem usage, filelist, scriptlist, autostart, stop/start button
   - [x] server elements not being destroyed? (see MTA Class elements, they're not destroyed atm)
   - [ ] res w/ tempResource won't start sometimes after it's been stopped once.
   - [ ] onClientResourceStart is broken, onResourceStart too?
+  - [ ] /restartres screws up file downloads (starts too fast after stop, need to use stop/start events for temp res?) in general resources with tempres screw up badly, need to properly wait for it to start/stop (thru start/stop events?) before doign anything with it or running client scripts.
 
   # error handling (FIXED)
   - [x] script error checking is only done on script load (scriptLoader). if there's an error that's inside, say a cmd handler, a timer or event, then it's not going through the error checking process that's happening in the scriptLoader.
