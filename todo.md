@@ -57,6 +57,7 @@ uptime, cpu usage, mem usage, filelist, scriptlist, autostart, stop/start button
   - [ ] onClientResourceStart root/resourceRoot, if resourceRoot should only trigger for that resource, if root, it should trigger ALL resourceStart events in EVERY script in EVERY resource.
   - [ ] some files need to be unloaded like fonts before they can be deleted.
   - [ ] onClientReady isn't used.
+  - [ ] [!] eventhandlers get triggered 3 times? see ai resource. self.col (collisionSphere) is not working anymore!!
 
   # error handling (FIXED partially)
   - [x] script error checking is only done on script load (scriptLoader). if there's an error that's inside, say a cmd handler, a timer or event, then it's not going through the error checking process that's happening in the scriptLoader.
