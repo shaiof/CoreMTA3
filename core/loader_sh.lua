@@ -57,8 +57,9 @@ function replaceFuncs(script)
         else
             script.parent.globals[elemFuncs[i]] = function(...)
                 local element = origFunc(...)
+                
 
-                if isElement(element) then
+                if isElement(element) and element.type then
                     if isElement(script.parent.clientRoot) then
                         -- element:setParent(script.parent.clientRoot)
                         if elemFuncs[i]:find('gui') then

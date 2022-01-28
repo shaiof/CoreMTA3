@@ -41,11 +41,11 @@ function Script:getResourceRootElement(resourceOrName)
 	elseif type(resource) == 'table' then
 		res = resourceOrName
 	end
-	return res.root
+	return res or self.parent.root
 end
 
 function Script:getRootElement()
-	return self.parent.root
+	return root
 end
 
 function Script:getThisResource()

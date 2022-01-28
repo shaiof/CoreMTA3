@@ -18,7 +18,12 @@ end
 addEventHandler('onDebugMessage', resourceRoot, function(msg, type, file, lineNum)
 	if msg:lower():match('%[server%]') then
 		cancelEvent()
-		outputDebugString(msg, 4, 155, 255, 255)
+
+		if msg:lower():match('%(!%)') then
+			outputDebugString(msg, 4, 255, 150, 0)
+		else
+			outputDebugString(msg, 4, 155, 255, 255)
+		end
 	end
 	if type == 1 and file then
 		local resName = file:match('%("(.*)",')

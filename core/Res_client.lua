@@ -11,8 +11,9 @@ function Res.new(name, serverRoot)
 	self.files = {}
 	self.scripts = {}
 	self.root = serverRoot
-	self.clientRoot = Element('resource', name)
+	-- self.clientRoot = Element('resource', name)
 	self.globals = {}
+	self.globals.resourceRoot = self.root
 	--self.globals.root = serverRoot
 	self.loaded = false
 	self.downloadedFiles = {}
@@ -80,6 +81,13 @@ end
 addEvent('onResPreStart', true)
 addEventHandler('onResPreStart', root, Res.start)
 
+addEventHandler('onClientResourceStop', resourceRoot, function(res)
+	if res ~= getThisResource() then return end
+    for name in pairs(resources) do
+        Res.stop(name, true)
+    end
+end)
+
 function Res.stop(name)
 	local res = resources[name]
 	if res then
@@ -115,7 +123,7 @@ function Res:unload()
 	for i=1, #self.scripts do
 		self.scripts[i]:unload()
 	end
-	self.clientRoot:destroy()
+	-- self.clientRoot:destroy()
 	print('[Client] unloading scripts')
 end
 
@@ -166,6 +174,18 @@ addEventHandler('loadClientScripts', root, function(resourceName, scripts)
 
 		print('[Client] '..scripts[i].name..' loaded ('..i..'/'..#scripts..')')
 	end
+
+	-- trigger resourcestart events
+	for i=1, #res.scripts do
+		for j=1, #res.scripts[i].events do
+			if res.scripts[i].events[j][1] == 'onClientResourceStart' then
+				res.scripts[i].events[j][3](res)
+			end
+		end
+	end
+
+	-- unsafe:
+	-- triggerEvent('onClientResourceStart', root, res)
 end)
 
 addEventHandler('onClientResourceStart', resourceRoot, function()

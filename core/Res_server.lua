@@ -7,6 +7,7 @@ addEvent('onClientResStart', true)
 Res = {}
 resources = {}
 Settings = {}
+startQueue = {}
 
 function Res.new(name)
     local self = setmetatable({}, {__index = Res})
@@ -21,14 +22,19 @@ function Res.new(name)
     self.elements = {}
     self.files = {}
     self.root = Element('resource', name)
+    self.globals.resourceRoot = self.root
     setmetatable(self.globals, {__index = _G})
     return self
 end
 
 
-function Res.start(resName)
+function Res.start(resName, addToQueue)
     if resources[resName] then
-        return print('[Server] '.."resource '"..resName.."' already started")
+        if addToQueue then
+            startQueue[resName] = true
+            return false
+        end
+        return print('[Server] (!) '.."resource '"..resName.."' already started.")
     end
 
     local meta = Res.getMeta(resName)
@@ -74,10 +80,10 @@ function Res.start(resName)
     -- create Temp resource for clientfiles
     if #res.clientFiles > 0 then
         res.tempResource = res:createTempResource()
-        local suc = res.tempResource:start()
-
-        if not suc or res.state == 'failed to load' then
-            error('Error loading tempResource: '..resName..' Reason: '..res.tempResource.loadFailureReason, 0)
+        local suc = startResource(res.tempResource)
+        
+        if not suc then
+            error('Error loading tempResource: '..resName..' Reason: '..getResourceLoadFailureReason(res.tempResource))
         end
 
         print('[Server] started temp resource', res.tempResource.name, suc)
@@ -85,67 +91,78 @@ function Res.start(resName)
 
     triggerClientEvent('onResPreStart', root, resName, res.root, {res.client, res.clientFiles}, res.tempResource and res.tempResource.rootElement)
 
-    updateResourcesList(resName)
+    updateResourcesList(resName, res.clientFiles)
 
     print('[Server] '..resName..' started')
+    return true
 end
 
-addEventHandler('onResourceStop', root, function(tempRes)
-    if not tempRes.name:find('CORE_') then return end
+addEventHandler('onResourceStop', root, function(res)
+    if res.name:find('CORE_') then
+        local resName = res.name:sub(6)
 
-    iprint('stopped',tempRes)
-end)
+        -- clean up
+        resources[resName] = nil
+        for _=1, 2 do collectgarbage() end
+        print('[Server] '..resName..' has been stopped.')
 
-function Res:createTempResource()
-    -- refreshResources()
-
-    local tempResName = 'CORE_'..self.name
-
-    local existingResource = getResourceFromName(tempResName)
-    if existingResource then
-        if existingResource.state == 'running' then
-            local s = stopResource(existingResource)
-            print('stopping temp res', s)
+        if startQueue[resName] then
+            Timer(function()
+                Res.start(resName)
+                startQueue[resName] = nil
+            end, 0, 1)            
         end
-
-        while existingResource.state ~= 'running' or existingResource.state ~= 'stopping' do -- causes freeze (need smt asychronous)
-            if existingResource.state == 'loaded' then
-                deleteResource(existingResource)
-                print('deleted old res')
-                break
+    else
+        if res == getThisResource() then
+            for name in pairs(resources) do
+                Res.stop(name, true) -- true to prevent client events being triggered
             end
         end
     end
+end)
 
-    refreshResources(true)
+addEventHandler('onResourceStop', resourceRoot, function(res)
+    if res ~= getThisResource() then return end
+    
+end)
 
-    local tempResource = Resource(tempResName, '[temp]')
+function Res:createTempResource()
+    local tempResName = 'CORE_'..self.name
+
+    local tempResource = getResourceFromName(tempResName)
+
+    if tempResource then
+        local cachedFilelist = getResourceCachedFilelist(self.name)
+        for i=1, #cachedFilelist do
+            if fileExists('resources/'..tempResName..'/'..cachedFilelist[i]) then
+                fileDelete('resources/'..tempResName..'/'..cachedFilelist[i])
+            end
+        end
+        if fileExists('resources/'..tempResName..'/client.lua') then
+            fileDelete('resources/'..tempResName..'/client.lua')
+        end
+    else
+        tempResource = Resource(tempResName, '[temp]')
+        refreshResources(true)
+    end
 
     local cfContent = 'addEventHandler("onClientResourceStart", resourceRoot, function()\n'
     cfContent = cfContent..'Timer(function()'
-    local mfContent = '<meta>\n    <oop>true</oop>\n    <script src="client.lua" type="client" cache="false"/>\n'
+    local mfContent = '<meta>\n    <oop>true</oop>\n    <script src="client.lua" type="client" cache="true"/>\n'
     for i=1, #self.clientFiles do
         cfContent = cfContent..'    downloadFile("'..self.clientFiles[i]..'")\n'
         mfContent = mfContent..'    <file src="'..self.clientFiles[i]..'" download="false"/>\n'
-        File.copy('resources/'..self.name..'/'..self.clientFiles[i], ':'..tempResName..'/'..self.clientFiles[i], true)
+        fileCopy('resources/'..self.name..'/'..self.clientFiles[i], ':'..tempResName..'/'..self.clientFiles[i], true)
     end
-    cfContent = cfContent..'end, 0, 1)\n'
+    cfContent = cfContent..'end, 1, 1)\n'
     cfContent = cfContent..'end)'
     mfContent = mfContent..'</meta>'
 
-    -- if File.exists(':'..tempResName..'/client.lua') then
-    --     File.delete(':'..tempResName..'/client.lua')
-    -- end
-    tempResource:removeFile(':'..tempResName..'/client.lua')
-    local cf = File(':'..tempResName..'/client.lua')
+    local cf = fileCreate(':'..tempResName..'/client.lua')
     cf:write(cfContent)
     cf:close()
 
-    -- if File.exists(':'..tempResName..'/meta.lua') then
-    --     File.delete(':'..tempResName..'/meta.lua')
-    -- end
-    tempResource:removeFile(':'..tempResName..'/meta.xml')
-    local mf = File(':'..tempResName..'/meta.xml')
+    local mf = fileCreate(':'..tempResName..'/meta.xml')
     mf:write(mfContent)
     mf:close()
 
@@ -154,35 +171,34 @@ function Res:createTempResource()
     return tempResource
 end
 
-function Res.stop(name)
+function Res.stop(name, coreStop)
     local name = name
     local res = resources[name]
     if not res then return end
 
     res:unload()
 
-    if #res.client > 0 then
+    if #res.client > 0 and not coreStop then
         triggerClientEvent(root, 'onResStop', root, name)
     end
 
     -- stop tempResource
     if res.tempResource and res.tempResource.state == 'running' then
-        Resource.stop(res.tempResource)
+        stopResource(res.tempResource)
         print('[server] stopping tempResource')
+    else
+        -- clean up
+        resources[name] = nil
+        for _=1, 2 do collectgarbage() end
+        print('[Server] '..name..' has been stopped.')
     end
-
-    -- clean up
-    resources[name] = nil
-    for _=1, 2 do collectgarbage() end
-    print('[Server] '..name..' has been stopped.')
 end
 
 function Res.restart(name)
     local name = name
     if resources[name] then
         Res.stop(name)
-        -- Timer(Res.start, 1500, 1, name)
-        Res.start(name) --> won't start sometimes when there's a tempResource (timer fixes a bit but not enough, need to use onResourceStop event?)
+        Res.start(name, true) -- true = (queue up and start when res stops)
     end
 end
 
@@ -216,7 +232,7 @@ function Res.getMeta(name)
                     meta.client[#meta.client+1] = attr.src
                     meta.server[#meta.server+1] = attr.src
                 else
-                    meta.server[#meta.server+1] = attr.src
+                    meta.client[#meta.client+1] = attr.src
                 end
             end
         end
@@ -257,6 +273,18 @@ function Res.loadServer(name, scripts) -- used to be Script.loadServer (??)
             print('[Server] '..filename..' loaded ('..i..'/'..#scripts..')')
         end
     end
+
+    -- trigger resourcestart events
+    local res = resources[name]
+    if res then
+        for i=1, #res.serverScripts do
+            for j=1, #res.serverScripts[i].events do
+                if res.serverScripts[i].events[j][1] == 'onResourceStart' then
+                    res.serverScripts[i].events[j][3](res)
+                end
+            end
+        end
+    end
 end
 
 function Res:loadServerScript(filename, buffer)
@@ -267,6 +295,7 @@ function Res:loadServerScript(filename, buffer)
     self.serverScripts[filename] = script
 
     triggerEvent('onResStart', root)
+
     return true, nil
 end
 
@@ -278,7 +307,22 @@ function Res:unload()
     print('[Server] unloading scripts')
 end
 
-function updateResourcesList(name)
+function getResourceCachedFilelist(resName)
+    local f = fileOpen('resources/resources.json')
+    if f then
+        local c = f:read(f.size)
+        f:close()
+        if #c > 0 then
+            local list = fromJSON(c)
+            if type(list) == 'table' then
+                return list[resName]
+            end
+        end
+    end
+    return false
+end
+
+function updateResourcesList(name, clientFiles)
     local path = 'resources/resources.json'
     local list
 
@@ -288,22 +332,16 @@ function updateResourcesList(name)
         oldFile:close()
     end
 
-    for i=#list, 1, -1 do
-        local resName = list[i]
+    for resName in pairs(list) do
         if not fileExists('resources/'..resName..'/meta.xml') and
            not fileExists('resources/'..resName..'/meta.json') then
-            table.remove(list, i)
-        else
-            if resName == name then
-                table.remove(list, i)
-            end
+            list[resName] = nil
         end
     end
 
-    table.insert(list, name)
-
+    list[name] = clientFiles
+    
     fileDelete(path)
-
     local newFile = File(path)
     newFile:write(toJSON(list))
     newFile:close()
@@ -344,10 +382,10 @@ addEventHandler('getClientScriptsBuffer', root, function(resourceName)
     triggerClientEvent(client, 'loadClientScripts', root, resourceName, clientScripts) --[client] sends client scripts buffers
 end)
 
-addEvent('onClientReady', true)
-addEventHandler('onClientReady', root, function(resourceName)
-    triggerClientEvent(client, 'executeResource', root, resourceName) --[client] tells client to start the resource
-end)
+-- addEvent('onClientReady', true)
+-- addEventHandler('onClientReady', root, function(resourceName)
+--     triggerClientEvent(client, 'executeResource', root, resourceName) --[client] tells client to start the resource
+-- end)
 
 addEvent('clientRequestStart', true)
 addEventHandler('clientRequestStart', root, function(resourceName)
@@ -377,5 +415,5 @@ Timer(function()
     for i=1, #buffer.autostart do
         Res.start(buffer.autostart[i])
     end
-end, 255, 1)
+end, 200, 1)
 
