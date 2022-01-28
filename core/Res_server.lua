@@ -32,7 +32,7 @@ function Res.start(resName, addToQueue)
     if resources[resName] then
         if addToQueue then
             startQueue[resName] = true
-            return false
+            return true
         end
         return print('[Server] (!) '.."resource '"..resName.."' already started.")
     end
@@ -108,11 +108,11 @@ addEventHandler('onResourceStop', root, function(res)
 
         if startQueue[resName] then
             Timer(function()
-                Res.start(resName)
                 startQueue[resName] = nil
-            end, 0, 1)            
+                Res.start(resName) -- should we make a start queue?
+            end, 100, 1)            
         end
-    else
+    else -- if CoreMTA stops
         if res == getThisResource() then
             for name in pairs(resources) do
                 Res.stop(name, true) -- true to prevent client events being triggered

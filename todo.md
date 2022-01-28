@@ -52,12 +52,13 @@ uptime, cpu usage, mem usage, filelist, scriptlist, autostart, stop/start button
   - [x] server scripts not unloading (res.server contains both index and filename as key!)
   - [x] server elements not being destroyed? (see MTA Class elements, they're not destroyed atm)
   - [x] res w/ tempResource won't start sometimes after it's been stopped once.
-  - [x] /restartres screws up file downloads (starts too fast after stop, need to use stop/start events for temp res?) in general resources with tempres screw up badly, need to properly wait for it to start/stop (thru start/stop events?) before doign anything with it or running client scripts.
-  - [x] onClientResourceStart is broken, onResourceStart too?
-  - [ ] onClientResourceStart root/resourceRoot, if resourceRoot should only trigger for that resource, if root, it should trigger ALL resourceStart events in EVERY script in EVERY resource.
+  - [ ] **/restartres screws up file downloads (starts too fast after stop, need to use stop/start events for temp res?) in general resources with tempres screw up badly, need to properly wait for it to start/stop (thru start/stop events?) before doign anything with it or running client scripts.**
+  - [ ] starting resources w/ files still breaks often!!
+  - [ ] Fix resourceStart events root/resourceRoot, if resourceRoot it should only trigger for that resource, if root, it should trigger ALL resourceStart events in EVERY script in EVERY resource.
   - [ ] some files need to be unloaded like fonts before they can be deleted.
   - [ ] onClientReady isn't used.
-  - [ ] [!] eventhandlers get triggered 3 times? see ai resource. self.col (collisionSphere) is not working anymore!!
+  - [ ] [!] eventhandlers get triggered 3 times? see ai resource. self.col (colSphere) isn't working anymore!!
+  
 
   # error handling (FIXED partially)
   - [x] script error checking is only done on script load (scriptLoader). if there's an error that's inside, say a cmd handler, a timer or event, then it's not going through the error checking process that's happening in the scriptLoader.
