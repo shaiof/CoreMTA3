@@ -65,8 +65,8 @@ uptime, cpu usage, mem usage, filelist, scriptlist, autostart, stop/start button
     - we could separate the error checking from the buffer and feed any callbacks from other functions through it.
     - If we do that, how are we gonna get the correct line the error occurred at? the first line would be the first line in the callback function.
     - we ned to somehow go through every argument of a global function and check if it's a function although this wouldn't work for private local functions and anonymous functions
-  - [ ] error checking is still messing up often, for instance when resource name is too long?
-  - [ ] make warnings messages prettier
+  - [ ] error checking is still messing up often, for instance when resource name is too long? use ids for resname and filepath instead?
+  - [ ] parse warning messages in onDebugMessage (they get skipped atm)
 
 # ideas
 - ability to set script or entire res to private so other resources can't mess with it (only get name, root etc.)
