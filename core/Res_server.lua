@@ -27,7 +27,6 @@ function Res.new(name)
     return self
 end
 
-
 function Res.start(resName, addToQueue)
     if resources[resName] then
         if addToQueue then
@@ -109,7 +108,7 @@ addEventHandler('onResourceStop', root, function(res)
         if startQueue[resName] then
             Timer(function()
                 startQueue[resName] = nil
-                Res.start(resName) -- should we make a start queue?
+                Res.start(resName) --? should we make a start queue?
             end, 100, 1)            
         end
     else -- if CoreMTA stops
@@ -119,11 +118,6 @@ addEventHandler('onResourceStop', root, function(res)
             end
         end
     end
-end)
-
-addEventHandler('onResourceStop', resourceRoot, function(res)
-    if res ~= getThisResource() then return end
-    
 end)
 
 function Res:createTempResource()
